@@ -2,6 +2,9 @@ package com.neupanesushant.bhagavadgeeta
 
 import android.content.Context
 import android.media.MediaPlayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 
 class AndroidVerseAudioPlayer(context: Context) : VerseAudioPlayer {
@@ -13,8 +16,19 @@ class AndroidVerseAudioPlayer(context: Context) : VerseAudioPlayer {
         audioFile.writeBytes(bytes)
         player = MediaPlayer().apply {
             setDataSource(audioFile.absolutePath)
-            setOnCompletionListener { onFinished(); stop() }
-            setOnErrorListener { _, _, _ -> onFinished(); stop(); true }
+            setOnCompletionListener {
+                CoroutineScope(Dispatchers.Main).launch {
+                    onFinished()
+                }
+                stop()
+            }
+            setOnErrorListener { _, _, _ ->
+                CoroutineScope(Dispatchers.Main).launch {
+                    onFinished()
+                }
+                stop()
+                true
+            }
             prepare()
             start()
         }
