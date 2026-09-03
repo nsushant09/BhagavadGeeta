@@ -1497,7 +1497,7 @@ private fun More(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "BHAGAVAD GITA READER  ·  VERSION 1.0",
+                "BHAGAVAD GEETA READER  ·  VERSION 1.0",
                 color = MaterialTheme.colorScheme.secondary,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
