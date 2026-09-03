@@ -121,6 +121,7 @@ fun App(
     storage: AppStorage = MemoryAppStorage(),
     actions: PlatformActions = NoOpPlatformActions(),
     audioPlayer: VerseAudioPlayer = NoOpVerseAudioPlayer(),
+    notificationScheduler: NotificationScheduler = NoOpNotificationScheduler(),
     repository: GitaRepository = BundledGitaRepository()
 ) {
     val chapters by produceState<List<Chapter>>(emptyList(), repository) {
@@ -153,6 +154,9 @@ fun App(
     var selectedLanguage by remember {
         mutableStateOf(storage.read("translation_language") ?: "all")
     }
+    var notificationEnabled by remember {
+        mutableStateOf(storage.read(StorageKeys.NotificationEnabled) == "true")
+    }
     var destination by remember { mutableStateOf(Destination.HOME) }
     var readerRequest by remember { mutableStateOf<ReaderRequest?>(null) }
     var progress by remember(chapters) {
@@ -182,6 +186,25 @@ fun App(
     fun updateLanguage(newLang: String) {
         selectedLanguage = newLang
         storage.write("translation_language", newLang)
+    }
+
+    fun updateNotificationEnabled(enabled: Boolean) {
+        notificationEnabled = enabled
+        storage.write(StorageKeys.NotificationEnabled, if (enabled) "true" else "false")
+        val verseText = featuredVerse?.preferredTranslation(selectedLanguage)
+            ?: "Start your day with today's verse contemplation from the Bhagavad Gita."
+        val verseRef = featuredVerse?.reference?.let { "Verse $it" } ?: "Daily Wisdom"
+        val title = "Morning Discipline · $verseRef"
+        notificationScheduler.scheduleMorningNotification(enabled, title, verseText)
+    }
+
+    LaunchedEffect(notificationEnabled, featuredVerse, selectedLanguage) {
+        if (notificationEnabled && featuredVerse != null) {
+            val verseText = featuredVerse!!.preferredTranslation(selectedLanguage)
+            val verseRef = "Verse ${featuredVerse!!.reference}"
+            val title = "Morning Discipline · $verseRef"
+            notificationScheduler.scheduleMorningNotification(true, title, verseText)
+        }
     }
 
     MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, typography = AppTypography) {
@@ -271,13 +294,15 @@ fun App(
                                     dark = dark,
                                     fontScale = fontScale,
                                     selectedLanguage = selectedLanguage,
+                                    notificationEnabled = notificationEnabled,
                                     actions = actions,
                                     changeTheme = {
                                         dark = !dark
                                         storage.write(StorageKeys.Theme, if (dark) "dark" else "light")
                                     },
                                     changeFontScale = ::updateFontScale,
-                                    changeLanguage = ::updateLanguage
+                                    changeLanguage = ::updateLanguage,
+                                    changeNotificationEnabled = ::updateNotificationEnabled
                                 )
                             }
                         }
@@ -1251,12 +1276,14 @@ private fun More(
     dark: Boolean,
     fontScale: Float,
     selectedLanguage: String,
+    notificationEnabled: Boolean,
     actions: PlatformActions,
     changeTheme: () -> Unit,
     changeFontScale: (Float) -> Unit,
-    changeLanguage: (String) -> Unit
+    changeLanguage: (String) -> Unit,
+    changeNotificationEnabled: (Boolean) -> Unit
 ) = LazyColumn(
-    modifier.fillMaxSize(),
+    modifier = modifier.fillMaxSize(),
     contentPadding = PaddingValues(bottom = 30.dp),
     verticalArrangement = Arrangement.spacedBy(22.dp)
 ) {
@@ -1400,6 +1427,47 @@ private fun More(
                                 }
                             }
                         }
+                    }
+                }
+
+                // Morning Discipline Notification Preference
+                Surface(Modifier.fillMaxWidth(), color = Ink, shape = RoundedCornerShape(20.dp)) {
+                    Row(
+                        Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "MORNING DISCIPLINE",
+                                color = Gold,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.2.sp
+                            )
+                            Text(
+                                "5:00 AM Daily Notification",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                            Text(
+                                if (notificationEnabled) "Verse of the day at 5:00 AM" else "Disabled",
+                                color = Color.White.copy(alpha = .62f),
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 2.dp)
+                            )
+                        }
+                        Switch(
+                            checked = notificationEnabled,
+                            onCheckedChange = changeNotificationEnabled,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Saffron,
+                                uncheckedThumbColor = Color.White.copy(alpha = .6f),
+                                uncheckedTrackColor = Color.Transparent
+                            )
+                        )
                     }
                 }
             }

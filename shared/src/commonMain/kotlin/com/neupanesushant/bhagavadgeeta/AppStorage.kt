@@ -12,7 +12,7 @@ class MemoryAppStorage : AppStorage {
     override fun write(key: String, value: String) { values[key] = value }
 }
 
-internal object StorageKeys {
+object StorageKeys {
     const val Theme = "theme"
     const val Bookmarks = "bookmarks"
     const val Highlights = "highlights"
@@ -21,4 +21,5 @@ internal object StorageKeys {
     const val ReadingIndexPrefix = "reading_index_"
     const val ReadingOffsetPrefix = "reading_offset_"
     const val FontScale = "font_scale"
+    const val NotificationEnabled = "notification_enabled"
 }
