@@ -1,24 +1,46 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Bhagavad Geeta
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+A scripture reading app built with Kotlin Multiplatform and Compose Multiplatform. The shared reading experience targets Android and iOS, with platform-specific integrations for storage, audio, notifications, and system UI.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+## Features
 
-### Running the apps
+- Browse the Bhagavad Gita's 18 chapters and read verse text, transliteration, word meanings, translations, and commentaries.
+- See a daily featured verse.
+- Play bundled verse recitations.
+- Save bookmarks and highlights, and resume reading progress.
+- Adjust text size, choose a reading mode, and switch between light and dark themes.
+- Schedule reading reminders.
+- Read content offline; chapter data and audio are bundled with the app.
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+## Project layout
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+- `shared/` — shared Compose UI, scripture content, and common logic.
+  - `src/commonMain/` — shared UI, repository, models, and bundled content.
+  - `src/androidMain/` and `src/iosMain/` — platform implementations.
+- `androidApp/` — Android application entry point and resources.
+- `iosApp/` — Xcode project and SwiftUI entry point.
+- `tools/import_gita_content.py` — utility for importing scripture content.
 
----
+## Requirements
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+- Android Studio with the Android SDK configured for this project.
+- A compatible JDK and the Gradle version specified by the included wrapper.
+- Xcode for building and running the iOS app on macOS.
+
+## Build and run
+
+From this directory, build the Android debug app with:
+
+```bash
+./gradlew :androidApp:assembleDebug
+```
+
+Open `iosApp/iosApp.xcodeproj` in Xcode to build and run the iOS app. Select an available iOS simulator or a configured device.
+
+## Scripture content
+
+The chapter catalog and chapter JSON files are under `shared/src/commonMain/composeResources/files/content/`. Recitation audio is stored under `shared/src/commonMain/composeResources/files/verse_recitation/`. The content importer is in `tools/`; review the source and expected input format before using it to update bundled data.
+
+## Notes
+
+Reading content and recitation audio are packaged with the app. Notifications are scheduled locally by the platform implementations. No external content service is required for the bundled reading experience.
